@@ -13,7 +13,7 @@ app.secret_key = os.environ.get("SECRET_KEY", "cambia-esto-en-produccion")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 METADATA_FILE = os.path.join(BASE_DIR, "files_metadata.json")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "francy")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "francyreyes2207")
 MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100 MB
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
