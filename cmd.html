@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMD — By Exagonal</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Space Mono', monospace;
+    background: #080808;
+    color: #c9a84c;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .cmd-bar {
+    background: #141414;
+    border-bottom: 1px solid #222;
+    padding: 0.6rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    user-select: none;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.red    { background: #ff5f57; }
+  .dot.yellow { background: #febc2e; }
+  .dot.green  { background: #28c840; }
+  .cmd-title {
+    flex: 1;
+    text-align: center;
+    font-size: 0.62rem;
+    color: #444;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .terminal {
+    flex: 1;
+    padding: 2rem 2.5rem 1rem;
+    overflow-y: auto;
+    cursor: text;
+  }
+  .ascii {
+    color: #c9a84c;
+    font-size: clamp(0.3rem, 1.3vw, 0.65rem);
+    line-height: 1.15;
+    white-space: pre;
+    margin-bottom: 1.8rem;
+    text-shadow: 0 0 10px rgba(201,168,76,0.35);
+    animation: fadeIn 0.5s ease both;
+  }
+  .line {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.72rem;
+    line-height: 1.65;
+    opacity: 0;
+    animation: appear 0.01s ease forwards;
+  }
+  .prompt  { color: #e8c97a; white-space: nowrap; flex-shrink: 0; user-select: none; }
+  .out     { color: #c4b88a; }
+  .out.gold  { color: #c9a84c; }
+  .out.white { color: #f0ece0; }
+  .out.red   { color: #e05c5c; }
+  .out.green { color: #5ce06e; }
+  .out.blue  { color: #7289da; }
+  hr.sep { border: none; border-top: 1px solid #161616; margin: 1rem 0; }
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+    font-size: 0.72rem;
+    opacity: 0;
+    animation: appear 0.01s ease forwards;
+    animation-delay: 2.6s;
+  }
+  .input-row input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #f0ece0;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    caret-color: #c9a84c;
+    flex: 1;
+    letter-spacing: 0.02em;
+  }
+  .line:nth-child(1)  { animation-delay: 0.3s; }
+  .line:nth-child(2)  { animation-delay: 0.55s; }
+  .line:nth-child(3)  { animation-delay: 0.8s; }
+  .line:nth-child(4)  { animation-delay: 1.0s; }
+  .line:nth-child(5)  { animation-delay: 1.2s; }
+  .line:nth-child(6)  { animation-delay: 1.4s; }
+  .line:nth-child(7)  { animation-delay: 1.55s; }
+  .line:nth-child(8)  { animation-delay: 1.7s; }
+  .line:nth-child(9)  { animation-delay: 1.85s; }
+  .line:nth-child(10) { animation-delay: 2.0s; }
+  .line:nth-child(11) { animation-delay: 2.15s; }
+  .line:nth-child(12) { animation-delay: 2.3s; }
+  @keyframes appear  { to { opacity: 1; } }
+  @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+  .nav-bar {
+    position: sticky;
+    bottom: 0;
+    background: #0c0c0c;
+    border-top: 1px solid #1a1a1a;
+    padding: 0.65rem 2.5rem;
+    display: flex;
+    gap: 1rem;
+    z-index: 10;
+    opacity: 0;
+    animation: appear 0.3s 3s ease forwards;
+  }
+  .nav-link {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #3a3428;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-link:hover { color: #c9a84c; }
+  @media (max-width: 600px) {
+    .terminal { padding: 1.5rem 1.2rem 1rem; }
+    .ascii { font-size: 0.26rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cmd-bar">
+  <span class="dot red"></span>
+  <span class="dot yellow"></span>
+  <span class="dot green"></span>
+  <span class="cmd-title">exagonal.cmd — bash — 80x24</span>
+</div>
+
+<div class="terminal" id="terminal" onclick="focusInput()">
+
+<pre class="ascii">
+ ███████╗██╗  ██╗ █████╗  ██████╗  ██████╗ ███╗   ██╗ █████╗ ██╗     
+ ██╔════╝╚██╗██╔╝██╔══██╗██╔════╝ ██╔═══██╗████╗  ██║██╔══██╗██║     
+ █████╗   ╚███╔╝ ███████║██║  ███╗██║   ██║██╔██╗ ██║███████║██║     
+ ██╔══╝   ██╔██╗ ██╔══██║██║   ██║██║   ██║██║╚██╗██║██╔══██║██║     
+ ███████╗██╔╝ ██╗██║  ██║╚██████╔╝╚██████╔╝██║ ╚████║██║  ██║███████╗
+ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
+</pre>
+
+<hr class="sep">
+
+<div class="line"><span class="prompt">root@exagonal:~$</span><span class="out white">whoami</span></div>
+<div class="line"><span class="prompt"></span><span class="out gold">By Exagonal — Sistema de archivos privado</span></div>
+
+<div class="line"><span class="prompt">root@exagonal:~$</span><span class="out white">status</span></div>
+<div class="line"><span class="prompt"></span><span class="out">Sistema  : <span class="out green">ONLINE</span></span></div>
+<div class="line"><span class="prompt"></span><span class="out">Acceso   : <span class="out red">RESTRINGIDO</span></span></div>
+
+<hr class="sep">
+
+<div class="line"><span class="prompt">root@exagonal:~$</span><span class="out white">cat instrucciones.txt</span></div>
+<div class="line"><span class="prompt"></span><span class="out">Para acceder al repositorio de archivos,</span></div>
+<div class="line"><span class="prompt"></span><span class="out">escribe la frase de acceso y presiona <span class="out gold">ENTER</span>.</span></div>
+
+<div class="line"><span class="prompt">root@exagonal:~$</span><span class="out white">ls /cmds</span></div>
+<div class="line"><span class="prompt"></span><span class="out blue">discord &nbsp;&nbsp;&nbsp; archivos &nbsp;&nbsp;&nbsp; help</span></div>
+
+<div class="input-row">
+  <span class="prompt">root@exagonal:~$</span>
+  <input
+    type="text"
+    id="cmdInput"
+    autocomplete="off"
+    spellcheck="false"
+    autocorrect="off"
+    autocapitalize="none"
+    placeholder="_"
+  >
+</div>
+
+<div id="feedback"></div>
+
+</div>
+
+<div class="nav-bar">
+  <a href="/discord" class="nav-link">discord</a>
+  <span class="nav-link" style="color:#1e1e1e;">|</span>
+  <a href="/archivos" class="nav-link">archivos</a>
+</div>
+
+<script>
+  const input = document.getElementById('cmdInput');
+  const feedback = document.getElementById('feedback');
+  const terminal = document.getElementById('terminal');
+
+  setTimeout(() => input.focus(), 2700);
+  function focusInput() { input.focus(); }
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      const val = this.value.trim().toLowerCase();
+      this.value = '';
+      handleCommand(val);
+    }
+  });
+
+  function handleCommand(cmd) {
+    appendLine(cmd, 'white');
+
+    if (cmd === 'by exagonal') {
+      appendOut('Frase correcta. Acceso concedido...', '#5ce06e');
+      setTimeout(() => {
+        appendOut('Redirigiendo a /archivos ...', '#c9a84c');
+        setTimeout(() => { window.location.href = '/archivos'; }, 600);
+      }, 350);
+
+    } else if (cmd === 'discord') {
+      appendOut('Redirigiendo a /discord ...', '#7289da');
+      setTimeout(() => { window.location.href = '/discord'; }, 500);
+
+    } else if (cmd === 'help') {
+      appendOut('Comandos disponibles:', '#c9a84c');
+      appendOut('  by exagonal  ->  acceder a los archivos', '#c4b88a');
+      appendOut('  discord      ->  ver servidores', '#c4b88a');
+      appendOut('  clear        ->  limpiar pantalla', '#c4b88a');
+
+    } else if (cmd === 'clear') {
+      feedback.innerHTML = '';
+
+    } else if (cmd !== '') {
+      appendOut('comando no reconocido: "' + cmd + '"', '#e05c5c');
+      appendOut('escribe "by exagonal" para acceder.', '#5a5648');
+    }
+
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  function appendLine(text, cls) {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;gap:0.5rem;margin-bottom:0.3rem;font-size:0.72rem;line-height:1.65;';
+    div.innerHTML = '<span style="color:#e8c97a;white-space:nowrap;flex-shrink:0;user-select:none;">root@exagonal:~$</span>'
+      + '<span style="color:#f0ece0;">' + esc(text) + '</span>';
+    feedback.appendChild(div);
+  }
+
+  function appendOut(text, color) {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;gap:0.5rem;margin-bottom:0.3rem;font-size:0.72rem;line-height:1.65;';
+    div.innerHTML = '<span style="color:transparent;white-space:nowrap;flex-shrink:0;user-select:none;">root@exagonal:~$</span>'
+      + '<span style="color:' + color + ';">' + esc(text) + '</span>';
+    feedback.appendChild(div);
+  }
+
+  function esc(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+
+</body>
+</html>
